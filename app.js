@@ -6,6 +6,10 @@ const express =  require('express')
 const app = express()
 app.use(express.json())
 
+const fileUpload = require('express-fileupload')
+app.use(fileUpload())
+app.use(express.static('public'))
+
 // ---- import mongooes ----
 const mongoose = require('mongoose')
 // connect to the mongodb

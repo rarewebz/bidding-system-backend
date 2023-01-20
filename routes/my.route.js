@@ -6,16 +6,15 @@ const express = require('express')
 const AuctionModel = require('../models/auction.model')
 const BidModel = require('../models/bid.model')
 const UserModel = require('../models/user.model')
+const jwt = require('jsonwebtoken')
 const router = express.Router()
 
 const getHeaderFromToken = (req, res, next) => {
-    const token = req.headers['Authorization']
+    const token = req.headers.authorization;
     if(!token) res.status(401).json('Invalid token.')
-
-    const decodedToken = jwt.decode(token, {complete: true});
-    if(!decodedToken) res.status(401).json('Invalid token.')
-
-    res.tokendata = decodedToken.header
+    const data = jwt.verify(token.split(" ")[1], config.ACCESS_TOKEN_SECRET);
+    if(!data) res.status(401).json('Invalid token.')
+    res.tokendata = data
     next()
 }
 
@@ -35,8 +34,8 @@ const getAuction = async (req, res, next) => {
 
 router.get('/auctions', getHeaderFromToken, async (req, res) => {
     try {
-        if(res.tokendata.email) res.status(401).json('Invalid token.')
-        const user = await UserModel.findOne({email: res.tokendata.email})
+        if(!res.tokendata.username) res.status(401).json('Invalid token.')
+        const user = await UserModel.findOne({email: res.tokendata.username})
         if(!user) res.status(200).json({
             success: false,
             message: 'User not found.'
@@ -87,3 +86,5 @@ router.post('/:id', getAuction, async (req, res) => {
         })
     }
 })
+
+module.exports =  router

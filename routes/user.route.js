@@ -9,14 +9,46 @@ const UserModel = require('../models/user.model')
 const router = express.Router()
 const tokenList = {}
 
-router.post('/auth', async (req, res) => {
-    const {username, password} = req.body;
+const prepareUserObject = async (req, res, next) => {
+    console.log('-----------------> 1')
+    let newUser
     try {
-        const user = await UserModel.findOne({email: username})
+        const {firstname, lastname, email, password} = req.body;
+        const user = await UserModel.findOne({email})
+        if (user) {
+            return res.status(200).json({
+                success: false,
+                message: 'Email already exists! Please user another email'
+            })
+        } else {
+            newUser = await bcrypt.hash(password, 8, function (err, hash) {
+                const newUser = new UserModel({
+                    firstname,
+                    lastname,
+                    email,
+                    password: hash
+                })
+                res.newUser = newUser
+                next()
+            })
+        }
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: 'Error occurred. Please try again.'
+        })
+    }
+}
+
+router.post('/auth', async (req, res) => {
+    const {email, password} = req.body;
+    try {
+        const user = await UserModel.findOne({email: email})
+        console.log('--------> user: ', user)
         if (!user) {
             return res.status(200).json({
                 success: false,
-                message: 'Incorrect email!'
+                message: 'Incorrect email!1'
             })
         } else {
             const isMatch = await bcrypt.compare(password, user.password)
@@ -91,33 +123,19 @@ router.post('/refresh', (req,res) => {
     }
 })
 
-router.post('/create', async (req, res) => {
-    const {firstname, lastname, email, password} = req.body;
+router.post('/create', prepareUserObject, async (req, res) => {
+    console.log('Router: call create user')
     try {
-        const user = await UserModel.findOne({email})
-        if (user) {
-            return res.status(200).json({
-                success: false,
-                message: 'Email already exists! Please user another email'
-            })
-        } else {
-            const newUser = await bcrypt.hash(password, 8, function (err, hash) {
-                const newUser = new UserModel({
-                    firstname,
-                    lastname,
-                    email,
-                    password: hash
-                })
-                return newUser
-            })
+            const newUser = res.newUser
+        console.log('----------------->', newUser)
             const savedUser = await newUser.save()
             res.json({
                 success: true,
                 body: null,
                 message: "User created successfully!"
             })
-        }
     } catch (e) {
+        console.log(e)
         res.status(500).json({
             success: false,
             message: 'Error occurred. Please try again.'

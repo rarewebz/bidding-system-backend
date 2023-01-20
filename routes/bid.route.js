@@ -42,3 +42,5 @@ router.get('/auction/:id', getUser, async (req, res) => {
         })
     }
 })
+
+module.exports =  router
