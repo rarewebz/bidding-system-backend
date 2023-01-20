@@ -17,7 +17,19 @@ db.on('error', (error) => console.error(error))
 // detect db connecting when complete
 db.on('open', () => console.log('Connected to the database successfully!'))
 
-
+// ---- import routes ----
+// user router
+const userRouter = require('./routes/user.route')
+app.use('/user', userRouter)
+// auction router
+const auctionRouter = require('./routes/auction.route')
+app.use('/auction', auctionRouter)
+// bid router
+const bidRouter = require('./routes/bid.route')
+app.use('/bid', bidRouter)
+// my router
+const myRouter = require('./routes/my.route')
+app.use('/my', myRouter)
 
 // ---- start the server ----
 app.listen(3000, () => {
