@@ -40,7 +40,7 @@ router.get('/auctions', getHeaderFromToken, async (req, res) => {
             success: false,
             message: 'User not found.'
         })
-        const result = AuctionModel.find({ownerId: user._id})
+        const result = await AuctionModel.find({ownerId: user._id})
         res.json({
             success: true,
             body: result,
