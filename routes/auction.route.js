@@ -66,7 +66,7 @@ router.post('/', getHeaderFromToken, async (req, res) => {
         const result = await auction.save()
         res.json({
             success: true,
-            body: null,
+            body: {auction: result},
             message: 'Auction saved successfully!'
         })
     } catch (e) {
