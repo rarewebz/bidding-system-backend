@@ -80,9 +80,9 @@ router.post('/', getHeaderFromToken, async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const upcoming = await AuctionModel.find({status: {$not: 'DELETED'}, startdate: {$gt: Date.now()}})
-        const ongoing = await AuctionModel.find({status: {$not: 'DELETED'}, startdate: {$gte: Date.now()}, enddate: {$lte: Date.now()}})
-        const end = await AuctionModel.find({status: {$not: 'DELETED'}, enddate: {$lt: Date.now()}})
+        const upcoming = await AuctionModel.find({status: {$ne: 'DELETED'}, startdate: {$gt: Date.now()}})
+        const ongoing = await AuctionModel.find({status: {$ne: 'DELETED'}, startdate: {$gte: Date.now()}, enddate: {$lte: Date.now()}})
+        const end = await AuctionModel.find({status: {$ne: 'DELETED'}, enddate: {$lt: Date.now()}})
         const responseBody = {
             upcoming,
             ongoing,
