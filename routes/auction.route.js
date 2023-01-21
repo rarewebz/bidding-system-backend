@@ -9,6 +9,7 @@ const UserModel = require('../models/user.model')
 const jwt = require('jsonwebtoken')
 const path = require('path')
 const fs = require('fs')
+const { ObjectId } = require('bson')
 const router = express.Router()
 
 
@@ -24,7 +25,9 @@ const getHeaderFromToken = (req, res, next) => {
 const getAuctionData = async (req, res, next) => {
     let auction
     try {
+        console.log('Auction: ', req.params.id)
         auction = await AuctionModel.findById(req.params.id)
+        console.log('Auction Data: ', auction)
         if(!auction) res.status(200).json({
             success: false,
             message: 'Auction not found'
@@ -116,13 +119,19 @@ router.get('/:id/bids', async (req, res) => {
 
 router.post('/images/:id', getAuctionData, async (req, res) => {
     try {
-        res.auction.images = req.body.images
-        res.auction.images.forEach((image, index) => {
+        const imageArr = []
+        req.body.images.forEach((image, index) => {
             let base64Image = image.split(';base64,').pop();
-            fs.writeFile('/public/image.png', base64Image, {encoding: 'base64'}, function(err) {
-                console.log('err', err);
+            let imageFile = `${res.auction._id}_${index}.${image.match(/[^:/]\w+(?=;|,)/)[0]}`
+            imageArr.push(imageFile)
+            fs.writeFile(`public/images/${imageFile}`, base64Image, {encoding: 'base64'}, function(err) {
+                if(err) {
+                    console.error(err)
+                }
             })
         })
+        res.auction.images = imageArr
+        const result = await AuctionModel.update({_id: ObjectId(res.auction._id)}, {$set: {images: imageArr}})
         res.json({
             success: true,
             body: null,
