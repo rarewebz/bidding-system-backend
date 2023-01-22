@@ -58,86 +58,45 @@ app.use('/my', myRouter)
 
 // require('./routes/io-handler')(io);
 
-var STATIC_CHANNELS = [{
-    name: 'Global chat',
-    participants: 0,
-    id: 1,
-    sockets: []
-}, {
-    name: 'Funny',
-    participants: 0,
-    id: 2,
-    sockets: []
-}];
-
 let CURRENT_CHANNELS = [
-    {
-        name: 'Funny',
-        participants: 0,
-        id: '10000',
-        sockets: []
-    }
+    // {
+    //     name: 'Funny',
+    //     participants: 0,
+    //     id: '10000',
+    //     sockets: []
+    // }
 ]
 
-// io.on('connection', (socket) => { // socket object may be used to send specific messages to the new connected client
-//     console.log('new client connected');
-//     socket.emit('connection', null);
-//     socket.on('channel-join', id => {
-//         console.log('channel join', id);
-//         STATIC_CHANNELS.forEach(c => {
-//             if (c.id === id) {
-//                 if (c.sockets.indexOf(socket.id) == (-1)) {
-//                     c.sockets.push(socket.id);
-//                     c.participants++;
-//                     io.emit('channel', c);
-//                 }
-//             } else {
-//                 let index = c.sockets.indexOf(socket.id);
-//                 if (index != (-1)) {
-//                     c.sockets.splice(index, 1);
-//                     c.participants--;
-//                     io.emit('channel', c);
-//                 }
-//             }
-//         });
-//
-//         return id;
-//     });
-//     socket.on('send-message', message => {
-//         io.emit('message', message);
-//     });
-//
-//     socket.on('disconnect', () => {
-//         STATIC_CHANNELS.forEach(c => {
-//             let index = c.sockets.indexOf(socket.id);
-//             if (index != (-1)) {
-//                 c.sockets.splice(index, 1);
-//                 c.participants--;
-//                 io.emit('channel', c);
-//             }
-//         });
-//     });
-//
-// });
-
-
 const AuctionModal = require('./models/auction.model')
+const UserModal = require('./models/user.model')
+const bidModel = require('./models/bid.model')
 
 io.on('connection', (socket) => { // socket object may be used to send specific messages to the new connected client
     console.log('new client connected');
+
+    // Connection
     socket.emit('connection', null);
 
+    // Join to the auction
     socket.on('channel-join', async data => {
+
         let id = data.auctionId
         let userId = data.userId
-        console.log('channel join', id);
+        const user = await UserModal.findById(userId)
         let result = await CURRENT_CHANNELS.findIndex(e => e.id == id)
+
         if(result < 0) {
+
             console.log('channel join - 1: ', socket.id);
             const result = await AuctionModal.findById(id)
             if(result) {
                 let sockets = []
-                sockets.push(socket.id)
+                sockets.push(
+                    {
+                        user: user,
+                        socket: socket.id
+                    }
+                )
                 let newChannel = {
                     name: result.name,
                     participants: 1,
@@ -147,19 +106,27 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
                 CURRENT_CHANNELS.push(newChannel)
                 io.emit('channel', newChannel)
             }
+
         } else {
+
             console.log('channel join - 2: ', socket.id);
                 CURRENT_CHANNELS.forEach(c => {
                                 if (c.id == id) {
                                     console.log("socket: ", socket.id)
                                     console.log("socket idx: ", c.sockets.indexOf(socket.id))
                                     if (c.sockets.indexOf(socket.id) == (-1)) {
-                                        c.sockets.push(socket.id);
+                                        c.sockets.push(
+                                            {
+                                                user: user,
+                                                socket: socket.id
+                                            }
+                                        );
                                         c.participants++;
                                         io.emit('channel', c);
                                     }
                                 }
                 })
+
         }
 
 
@@ -198,14 +165,49 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
     });
 
     socket.on('bid', async message => {
-        let channel = await CURRENT_CHANNELS.findIndex(e => e.id == message.channel_id)
-        console.log("CURRENT_CHANNELS[channel]?.sockets: ", CURRENT_CHANNELS[channel]?.sockets)
-        io.sockets.in(CURRENT_CHANNELS[channel]?.sockets).emit('bid-listener', message);
+        let channel = await CURRENT_CHANNELS.findIndex(e => e.id == message.channelId)
+        let existingBid = bidModel.findOne({auctionId: message.channelId, bid: message.amount})
+
+        if(!existingBid) {
+
+            let ch_idx = await CURRENT_CHANNELS.findIndex(e => e.id == message.channelId)
+            let user_idx = await CURRENT_CHANNELS[ch_idx].sockets.map(e => e.socket == message.socketId)
+            let userId = CURRENT_CHANNELS[ch_idx].sockets[user_idx].user._id
+            let username = CURRENT_CHANNELS[ch_idx].sockets[user_idx].user.firstname
+            console.log('UserId: ', userId)
+
+            let bid = new bidModel({
+                auctionId: message.channelId,
+                userId: userId,
+                username: username,
+                bid: message.amount
+            })
+            await bid.save()
+            let socketArr = await CURRENT_CHANNELS[channel]?.sockets.map(v => (v.socket))
+            let bidResponse = {
+                success: true,
+                data: {
+                    username: username,
+                    bid: message.amount,
+                    biddate: new Date()
+                }
+            }
+            io.sockets.in(socketArr).emit('bid-listener', bidResponse);
+
+        } else {
+            let bidResponse = {
+                success: false,
+                message: "Sorry! This bid already exist"
+            }
+            let socketArr = [message.socketId]
+            io.sockets.in(socketArr).emit('bid-listener', bidResponse);
+        }
+
     });
 
     socket.on('disconnect', () => {
-        STATIC_CHANNELS.forEach(c => {
-            let index = c.sockets.indexOf(socket.id);
+        CURRENT_CHANNELS.forEach(c => {
+            let index = c.sockets.findIndex(e => e.socket == socket.id);
             if (index != (-1)) {
                 c.sockets.splice(index, 1);
                 c.participants--;
