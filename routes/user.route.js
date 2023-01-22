@@ -13,7 +13,7 @@ const prepareUserObject = async (req, res, next) => {
     console.log('-----------------> 1')
     let newUser
     try {
-        const {firstname, lastname, email, password} = req.body;
+        const {firstname, lastname, email, contact, password} = req.body;
         const user = await UserModel.findOne({email})
         if (user) {
             return res.status(200).json({
@@ -26,6 +26,7 @@ const prepareUserObject = async (req, res, next) => {
                     firstname,
                     lastname,
                     email,
+                    contact,
                     password: hash
                 })
                 res.newUser = newUser
@@ -78,6 +79,7 @@ router.post('/auth', async (req, res) => {
                         firstname: user.firstname,
                         lastname: user.lastname,
                         email: user.email,
+                        contact: user.contact,
                         date: user.date
                     },
                     access_token: accessToken,
