@@ -1,11 +1,16 @@
 // ---- config .env ----
 require('dotenv').config()
 const cors = require('cors')
+const http = require("http")
 
 // ---- import express ----
 const express =  require('express')
 const app = express()
 app.use(express.json())
+
+// ---- import socket.io ----
+let server = http.createServer(app);
+const io = require('socket.io')(server);
 
 const fileUpload = require('express-fileupload')
 app.use(fileUpload())
@@ -44,6 +49,8 @@ app.use('/bid', bidRouter)
 // my router
 const myRouter = require('./routes/my.route')
 app.use('/my', myRouter)
+
+require('./routes/io-handler')(io);
 
 // ---- start the server ----
 app.listen(3000, () => {

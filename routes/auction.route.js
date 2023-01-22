@@ -25,9 +25,7 @@ const getHeaderFromToken = (req, res, next) => {
 const getAuctionData = async (req, res, next) => {
     let auction
     try {
-        console.log('Auction: ', req.params.id)
         auction = await AuctionModel.findById(req.params.id)
-        console.log('Auction Data: ', auction)
         if(!auction) res.status(200).json({
             success: false,
             message: 'Auction not found'
@@ -136,6 +134,23 @@ router.post('/images/:id', getAuctionData, async (req, res) => {
             success: true,
             body: null,
             message: 'Auction item images saved successfully!'
+        })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            success: false,
+            message: 'Error occurred. Please try again.'
+        })
+    }
+})
+
+router.get('/:id/owner', getAuctionData, async (req, res) => {
+    try {
+        const owner = await UserModel.findById(res.auction.ownerId)
+        res.json({
+            success: true,
+            body: owner,
+            message: ''
         })
     } catch (e) {
         console.log(e)
