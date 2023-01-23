@@ -41,12 +41,12 @@ const auctionSchema = new mongoose.Schema({
     },
     ownerstatus: {
         type: String,
-        enum: ['SENT'],
+        enum: ['GIVEN'],
         required: false
     },
     bidderstatus: {
         type: String,
-        enum: ['CLAIMED'],
+        enum: ['RECEIVED'],
         required: false
     },
     status: {

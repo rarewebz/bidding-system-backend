@@ -142,4 +142,39 @@ router.get('/claims/:type', getHeaderFromToken, async (req, res) => {
     }
 })
 
+router.get('/auction/:id/status/:status', getHeaderFromToken, async (req, res) => {
+    try {
+        if(!res.tokendata.username) res.status(401).json('Invalid token.')
+        const user = await UserModel.findOne({email: res.tokendata.username})
+        if(!user) res.status(200).json({
+            success: false,
+            message: 'User not found.'
+        })
+
+        const id = req.params.id
+        const status = req.params.status
+
+        if(status === "received") {
+            const auctions = await AuctionModel.updateOne({_id: ObjectId(id)},{$set:{bidderstatus: "RECEIVED"}})
+            res.json({
+                success: true,
+                body: null,
+                message: 'Marked successfully!'
+            })
+        } else {
+            const auctions = await AuctionModel.updateOne({_id: ObjectId(id)},{$set:{ownerstatus: "GIVEN"}})
+            res.json({
+                success: true,
+                body: null,
+                message: 'Marked successfully!'
+            })
+        }
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: 'Error occurred. Please try again.'
+        })
+    }
+})
+
 module.exports =  router
