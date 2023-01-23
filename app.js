@@ -104,7 +104,7 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
                 let sockets = []
                 sockets.push(
                     {
-                        user: user,
+                        user: JSON.parse(JSON.stringify(user)),
                         socket: socket.id
                     }
                 )
@@ -129,7 +129,7 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
                                     if (c.sockets.indexOf(socket.id) == (-1)) {
                                         c.sockets.push(
                                             {
-                                                user: JSON.stringify(user),
+                                                user: JSON.parse(JSON.stringify(user)),
                                                 socket: socket.id
                                             }
                                         );
