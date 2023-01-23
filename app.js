@@ -82,14 +82,25 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
 
         let id = data.auctionId
         let userId = data.userId
+
+        console.log('0000000000000000000000 UserId: ', userId)
+
         const user = await UserModal.findById(userId)
+
+        console.log('0000000000000000000000 User: ', user)
+
         let result = await CURRENT_CHANNELS.findIndex(e => e.id == id)
 
         if(result < 0) {
 
             console.log('channel join - 1: ', socket.id);
+            console.log('channel join - 2: ', id);
             const result = await AuctionModal.findById(id)
+            console.log('ooooooooooooooooooooo 1: ', result)
             if(result) {
+
+                console.log('ooooooooooooooooooooo: ', result)
+
                 let sockets = []
                 sockets.push(
                     {
@@ -110,6 +121,7 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
         } else {
 
             console.log('channel join - 2: ', socket.id);
+            console.log('channel join - 3U: ', user);
                 CURRENT_CHANNELS.forEach(c => {
                                 if (c.id == id) {
                                     console.log("socket: ", socket.id)
@@ -117,7 +129,7 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
                                     if (c.sockets.indexOf(socket.id) == (-1)) {
                                         c.sockets.push(
                                             {
-                                                user: user,
+                                                user: JSON.stringify(user),
                                                 socket: socket.id
                                             }
                                         );
@@ -165,15 +177,35 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
     });
 
     socket.on('bid', async message => {
+
+        console.log("------------------->> message: ", message)
+
         let channel = await CURRENT_CHANNELS.findIndex(e => e.id == message.channelId)
-        let existingBid = bidModel.findOne({auctionId: message.channelId, bid: message.amount})
+        let existingBid = await bidModel.findOne({auctionId: message.channelId, bid: message.amount})
+
+        console.log("------------------->> ", existingBid)
+        console.log("------------------->> CF: ", CURRENT_CHANNELS)
 
         if(!existingBid) {
 
             let ch_idx = await CURRENT_CHANNELS.findIndex(e => e.id == message.channelId)
-            let user_idx = await CURRENT_CHANNELS[ch_idx].sockets.map(e => e.socket == message.socketId)
+
+            console.log("------------------->> ch_idx: ", ch_idx)
+
+            let user_idx = await CURRENT_CHANNELS[ch_idx].sockets.findIndex(e => e.socket == message.socketId)
+
+            console.log("------------------->> user_idx: ", user_idx)
+            console.log("------------------->> UU: ", CURRENT_CHANNELS)
+            console.log("------------------->> UU2: ", CURRENT_CHANNELS[ch_idx].sockets[user_idx])
+
             let userId = CURRENT_CHANNELS[ch_idx].sockets[user_idx].user._id
+
+            console.log("------------------->> userId: ", userId)
+
             let username = CURRENT_CHANNELS[ch_idx].sockets[user_idx].user.firstname
+
+            console.log("------------------->> username: ", username)
+
             console.log('UserId: ', userId)
 
             let bid = new bidModel({
@@ -182,6 +214,9 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
                 username: username,
                 bid: message.amount
             })
+
+            console.log("------------------->> bid: ", bid)
+
             await bid.save()
             let socketArr = await CURRENT_CHANNELS[channel]?.sockets.map(v => (v.socket))
             let bidResponse = {
