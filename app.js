@@ -188,21 +188,21 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
         console.log("------------------->> ", existingBid)
         console.log("------------------->> CF: ", CURRENT_CHANNELS)
 
-        const value = await bidModel.find().sort({bid: -1}).limit(1)
-
-        console.log("------------------------>>>>>> val: ", value)
-
-        if(value) {
-            const bidv = value[0].bid
-            if(bidv > message.amount) {
-                let bidResponse = {
-                    success: false,
-                    message: "Sorry! Your bid value is less than latest bid value"
-                }
-                let socketArr = [message.socketId]
-                io.sockets.in(socketArr).emit('bid-listener', bidResponse);
-            }
-        }
+        // const value = await bidModel.find().sort({bid: -1}).limit(1)
+        //
+        // console.log("------------------------>>>>>> val: ", value)
+        //
+        // if(value) {
+        //     const bidv = value[0].bid
+        //     if(bidv > message.amount) {
+        //         let bidResponse = {
+        //             success: false,
+        //             message: "Sorry! Your bid value is less than latest bid value"
+        //         }
+        //         let socketArr = [message.socketId]
+        //         io.sockets.in(socketArr).emit('bid-listener', bidResponse);
+        //     }
+        // }
 
         if(!existingBid) {
 
