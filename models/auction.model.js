@@ -39,6 +39,16 @@ const auctionSchema = new mongoose.Schema({
         required: true,
         default: Date.now
     },
+    ownerstatus: {
+        type: String,
+        enum: ['SENT'],
+        required: false
+    },
+    bidderstatus: {
+        type: String,
+        enum: ['CLAIMED'],
+        required: false
+    },
     status: {
         type: String,
         enum: ['ACTIVE', 'INACTIVE', 'DELETED', 'ENDED', 'CLOSED'],

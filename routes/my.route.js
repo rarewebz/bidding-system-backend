@@ -54,6 +54,28 @@ router.get('/auctions', getHeaderFromToken, async (req, res) => {
     }
 })
 
+router.get('/won', getHeaderFromToken, async (req, res) => {
+    try {
+        if(!res.tokendata.username) res.status(401).json('Invalid token.')
+        const user = await UserModel.findOne({email: res.tokendata.username})
+        if(!user) res.status(200).json({
+            success: false,
+            message: 'User not found.'
+        })
+        const result = await AuctionModel.find({ownerId: user._id})
+        res.json({
+            success: true,
+            body: result,
+            message: ''
+        })
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: 'Error occurred. Please try again.'
+        })
+    }
+})
+
 router.get('/:id/bids', async (req, res) => {
     try {
         const bids = await BidModel.find({auctionId: req.params.id})
@@ -79,6 +101,39 @@ router.post('/:id', getAuction, async (req, res) => {
             body: null,
             message: 'Auction item images saved successfully!'
         })
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: 'Error occurred. Please try again.'
+        })
+    }
+})
+
+
+router.get('/claims/:type', getHeaderFromToken, async (req, res) => {
+    try {
+        if(!res.tokendata.username) res.status(401).json('Invalid token.')
+        const user = await UserModel.findOne({email: res.tokendata.username})
+        if(!user) res.status(200).json({
+            success: false,
+            message: 'User not found.'
+        })
+        const type = req.params.type
+        if(type === "bidder") {
+            const auctions = await AuctionModel.find({winnerId: user._id, bidderstatus: {$exists: false}})
+            res.json({
+                success: true,
+                body: auctions,
+                message: ''
+            })
+        } else {
+            const auctions = await AuctionModel.find({winnerId: user._id, ownerstatus: {$exists: false}})
+            res.json({
+                success: true,
+                body: auctions,
+                message: ''
+            })
+        }
     } catch (e) {
         res.status(500).json({
             success: false,

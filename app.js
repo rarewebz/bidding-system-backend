@@ -1,4 +1,6 @@
 // ---- config .env ----
+const {ObjectId} = require("bson")
+
 require('dotenv').config()
 const cors = require('cors')
 const http = require("http")
@@ -268,6 +270,20 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
     });
 
 });
+
+setInterval(async () => {
+    console.log('Fuck')
+    const endAuctions = await AuctionModal.find({status: {$ne: 'DELETED'}, enddate: {$lt: Date.now()}, winnerId: {$exists: false}})
+    endAuctions.map(async a => {
+        let max = await bidModel.find({auctionId: a._id}).sort({biddate: -1}).limit(1)
+        console.log("Fire ---->", max)
+        if(max.length > 0) {
+            console.log("Fire ---->")
+            await AuctionModal.updateOne({_id: ObjectId(a._id)}, {$set: {winnerId: max[0].userId}})
+            await AuctionModal.updateOne({_id: ObjectId(a._id)}, {$set: {status: 'ENDED'}})
+        }
+    })
+}, 15000);
 
 // ---- start the server ----
 server.listen(3000, () => {
