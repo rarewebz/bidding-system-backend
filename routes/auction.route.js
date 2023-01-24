@@ -122,14 +122,15 @@ router.post('/images/:id', getAuctionData, async (req, res) => {
     try {
         const imageArr = []
         req.body.images.forEach((image, index) => {
-            let base64Image = image.split(';base64,').pop();
-            let imageFile = `${res.auction._id}_${index}.${image.match(/[^:/]\w+(?=;|,)/)[0]}`
-            imageArr.push(imageFile)
-            fs.writeFile(`public/images/${imageFile}`, base64Image, {encoding: 'base64'}, function(err) {
-                if(err) {
-                    console.error(err)
-                }
-            })
+            // let base64Image = image.split(';base64,').pop();
+            // let imageFile = `${res.auction._id}_${index}.${image.match(/[^:/]\w+(?=;|,)/)[0]}`
+            // imageArr.push(imageFile)
+            // fs.writeFile(`public/images/${imageFile}`, base64Image, {encoding: 'base64'}, function(err) {
+            //     if(err) {
+            //         console.error(err)
+            //     }
+            // })
+            imageArr.push(image)
         })
         res.auction.images = imageArr
         const result = await AuctionModel.update({_id: ObjectId(res.auction._id)}, {$set: {images: imageArr}})
