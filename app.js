@@ -309,7 +309,6 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
 
 
 setInterval(async () => {
-    console.log('Fuck')
     const endAuctions = await AuctionModal.find({status: {$ne: 'DELETED'}, enddate: {$lt: Date.now()}, winnerId: {$exists: false}})
     endAuctions.map(async a => {
         let max = await bidModel.find({auctionId: a._id}).sort({biddate: -1}).limit(1)
