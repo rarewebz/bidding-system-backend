@@ -4,6 +4,7 @@ const {ObjectId} = require("bson")
 require('dotenv').config()
 const cors = require('cors')
 const http = require("http")
+const { Storage } = require('megajs')
 
 // ---- import express ----
 const express =  require('express')
@@ -271,19 +272,59 @@ io.on('connection', (socket) => { // socket object may be used to send specific 
 
 });
 
+
+
+// let storage
+// (async function () {
+//      storage = new Storage({
+//         email: process.env.MEGA_USERNAME,
+//         password: process.env.MEGA_PASSWORD,
+//         userAgent: 'ExampleClient/1.0'
+//     })
+//
+//     // Will resolve once the user is logged in
+//     // or reject if some error happens
+//     await storage.ready
+// }()).catch(error => {
+//     console.error(error)
+//     process.exit(1)
+// })
+//
+// storage.once('ready', () => {
+//     // User is now logged in
+//     console.log('Logged to the MEGA Cloud Successfully!')
+//     storage.upload('hello-world.txt', 'Hello world!', async (error, file) => {
+//         if (error) return console.error('There was an error:', error)
+//         console.log('The file was uploaded!')
+//         let link = await file.link()
+//         console.log('The file was uploaded! -> ', link)
+//     })
+//
+// })
+//
+// storage.once('error', error => {
+//     // Some error happened
+//     console.log('Unable to Log to the MEGA Cloud, error: ', error)
+// })
+
+
 setInterval(async () => {
     console.log('Fuck')
     const endAuctions = await AuctionModal.find({status: {$ne: 'DELETED'}, enddate: {$lt: Date.now()}, winnerId: {$exists: false}})
     endAuctions.map(async a => {
         let max = await bidModel.find({auctionId: a._id}).sort({biddate: -1}).limit(1)
-        console.log("Fire ---->", max)
+        // console.log("Fire ---->", max)
         if(max.length > 0) {
-            console.log("Fire ---->")
+            // console.log("Fire ---->")
             await AuctionModal.updateOne({_id: ObjectId(a._id)}, {$set: {winnerId: max[0].userId}})
             await AuctionModal.updateOne({_id: ObjectId(a._id)}, {$set: {status: 'ENDED'}})
         }
     })
 }, 15000);
+
+
+
+
 
 // ---- start the server ----
 server.listen(3000, () => {
