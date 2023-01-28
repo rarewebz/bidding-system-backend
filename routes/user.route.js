@@ -10,7 +10,6 @@ const router = express.Router()
 const tokenList = {}
 
 const prepareUserObject = async (req, res, next) => {
-    console.log('-----------------> 1')
     let newUser
     try {
         const {firstname, lastname, email, contact, password} = req.body;
@@ -45,7 +44,6 @@ router.post('/auth', async (req, res) => {
     const {email, password} = req.body;
     try {
         const user = await UserModel.findOne({email: email})
-        console.log('--------> user: ', user)
         if (!user) {
             return res.status(200).json({
                 success: false,
@@ -129,7 +127,6 @@ router.post('/create', prepareUserObject, async (req, res) => {
     console.log('Router: call create user')
     try {
             const newUser = res.newUser
-        console.log('----------------->', newUser)
             const savedUser = await newUser.save()
             res.json({
                 success: true,

@@ -329,3 +329,5 @@ setInterval(async () => {
 server.listen(3000, () => {
     console.log("Backend server started...")
 })
+
+module.exports = server
